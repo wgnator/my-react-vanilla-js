@@ -13,7 +13,7 @@ export default function Main() {
   increaseButton.innerText = "increase";
   container.append(mainBox);
   container.append(increaseButton);
-
+  MyReact.useEffect(() => console.log("side effect exectuted!"), [count]);
   return {
     onClick: () => setCounter(counter + 1),
     render() {
