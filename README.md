@@ -1,2 +1,2 @@
 # my-react-vanilla-js
-My attempt on immitation of React in plain javascript (WIP)
+My attempt on implementing React from scratch in plain javascript (WIP)
