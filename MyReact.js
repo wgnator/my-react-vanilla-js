@@ -24,18 +24,17 @@ export const MyReact = (function () {
       currentHookIndex = 0;
       currentComponentIndex = 0;
       while (effectsToRun.length > 0) effectsToRun.pop()();
-      console.log("hookStates after render:", hookStates);
+      console.log("hookStates after render:", JSON.stringify(hookStates));
       // console.log("rendered components:", renderedComponentsInSeries);
 
       return renderedComponent;
     },
     useState(initialValue) {
       const thisHookIndex = currentHookIndex;
-      if (hookStates[currentHookIndex] === undefined) hookStates.push({ value: initialValue, updated: false });
+      if (hookStates[currentHookIndex] === undefined) hookStates.push({ value: initialValue });
 
       const setState = (newState) => {
         hookStates[thisHookIndex].value = newState instanceof Function ? newState() : newState;
-        hookStates[thisHookIndex].updated = true;
         window.dispatchEvent(new CustomEvent(RERENDER_EVENT));
       };
       return [hookStates[currentHookIndex++].value, setState];

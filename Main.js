@@ -36,14 +36,3 @@ export default function Main({ setCurrentPath }) {
     },
   };
 }
-// return {
-//   element: Component({
-//     element: increaseButton,
-//     props: {
-//       onClick: () => {
-//         setCounter(counter + 1);
-//         console.log(counter);
-//       },
-//     },
-//   }),
-// };
