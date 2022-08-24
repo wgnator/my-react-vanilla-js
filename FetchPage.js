@@ -15,9 +15,9 @@ export default function FetchPage({ navigateTo }) {
   }, []);
 
   const renderTree = parseHTMLToRenderTree`
-  <div className="Container">
-    <div className="dog_name">name: ${user?.results[0].name.first}</div>
-    <img src="${dogImageURL}" alt="" className="dog_photo" />
+  <div class="Container">
+    <div class="dog_name">name: ${user?.results[0].name.first}</div>
+    <img src="${dogImageURL}" alt="" class="dog_photo" />
     <div><button onclick="${() => navigateTo("/")}">go back to main page</button></div>
   </div>
   `;
