@@ -9,7 +9,6 @@ export const MyReact = (function () {
 
   return {
     render(Component, props) {
-      // console.log("COMPARE:", renderedComponentsInSeries[currentComponentIndex], Component, renderedComponentsInSeries[currentComponentIndex] === Component);
       if (renderedComponentsInSeries[currentComponentIndex] === undefined) renderedComponentsInSeries.push(Component);
       else if (renderedComponentsInSeries[currentComponentIndex] !== Component) {
         hookStates.splice(currentHookIndex);
@@ -17,15 +16,10 @@ export const MyReact = (function () {
       }
       currentComponentIndex++;
       const componentClosure = Component(props);
-      // console.log("hookStates before render:", hookStates);
-      // console.log("effects waiting to be run:", effectsToRun);
-      // console.log("componentClosure: ", componentClosure);
       const renderedComponent = componentClosure.render();
       currentHookIndex = 0;
       currentComponentIndex = 0;
       while (effectsToRun.length > 0) effectsToRun.pop()();
-      console.log("hookStates after render:", JSON.stringify(hookStates));
-      // console.log("rendered components:", renderedComponentsInSeries);
 
       return renderedComponent;
     },
@@ -40,15 +34,12 @@ export const MyReact = (function () {
       return [hookStates[currentHookIndex++].value, setState];
     },
     useEffect(callback, dependencies) {
-      // console.log("current hook index:", currentHookIndex, "states:", hookStates);
-      // console.log("use effect called. deps:", dependencies);
       if (hookStates[currentHookIndex] === undefined) {
         hookStates.push({ callback: callback, dependenciesState: dependencies });
         effectsToRun.push(callback);
       }
 
-      if (!hookStates[currentHookIndex].dependenciesState.every((previousDependencyState, i) => previousDependencyState === dependencies[i])) {
-        // console.log("dependency has changed. pushing effect hook.");
+      if (!hookStates[currentHookIndex].dependenciesState.every((previousDependencyState, i) => JSON.stringify(previousDependencyState) === JSON.stringify(dependencies[i]))) {
         effectsToRun.push(hookStates[currentHookIndex].callback);
       }
       currentHookIndex++;

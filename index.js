@@ -11,5 +11,3 @@ window.addEventListener(RERENDER_EVENT, () => {
 });
 
 window.dispatchEvent(new CustomEvent(RERENDER_EVENT));
-
-console.log(window.location.pathname);
