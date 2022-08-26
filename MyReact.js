@@ -1,13 +1,11 @@
-import { RERENDER_EVENT } from "./index.js";
-import { parseHTMLToVDOMTree } from "./utils.js";
+import { RENDER_EVENT } from "./index.js";
 
-export const MyReact = (function () {
+const MyReact = (function () {
   const hookStates = [];
   let currentHookIndex = 0;
-  const effectsToRun = [];
+  let effectsToRun = [];
   const renderedComponentsInSeries = [];
   let currentComponentIndex = 0;
-  const contexts = [];
 
   return {
     render(Component, props) {
@@ -21,23 +19,25 @@ export const MyReact = (function () {
 
       const VDOMTree = Component(props);
       console.log("rendered components:", renderedComponentsInSeries);
-      console.log("contexts: ", contexts);
-      currentHookIndex = 0;
 
-      let runEffectIndex;
+      currentHookIndex = 0;
 
       if (effectsToRun) {
         effectsToRun.forEach((effect, index) => {
           if (effect.componentIndex === currentComponentIndex) {
             effect.callback();
-            runEffectIndex = index;
+            console.log("effects to run before splice: ", effectsToRun);
           }
         });
-        effectsToRun.splice(runEffectIndex, 1);
+        effectsToRun = effectsToRun.reduce(
+          (prev, curr) => (curr.componentIndex !== currentComponentIndex ? prev.push(curr) : prev),
+          []
+        );
+        console.log("effects to run after splice: ", effectsToRun);
       }
 
       currentComponentIndex--;
-      // console.log("hook states after render: ", JSON.stringify(hookStates));
+      console.log("hook states after render: ", JSON.stringify(hookStates));
 
       return VDOMTree;
     },
@@ -48,7 +48,7 @@ export const MyReact = (function () {
 
       const setState = (newState) => {
         hookStates[thisHookIndex].value = newState instanceof Function ? newState() : newState;
-        window.dispatchEvent(new CustomEvent(RERENDER_EVENT));
+        window.dispatchEvent(new CustomEvent(RENDER_EVENT));
       };
       return [hookStates[currentHookIndex++].value, setState];
     },
@@ -77,30 +77,11 @@ export const MyReact = (function () {
       }
       return hookStates[currentHookIndex++];
     },
-
-    createContext(initialValue) {
-      const context = (() => {
-        let _value = initialValue;
-        return {
-          getValue() {
-            return _value;
-          },
-          Provider({ value, children }) {
-            if (value) _value = value;
-            console.log("_value", _value);
-            return {
-              value: _value,
-              children: children.map((child) => MyReact.render(...child)),
-            };
-          },
-        };
-      })();
-      contexts.push(context);
-      return contexts[contexts.length - 1];
-    },
-
-    useContext(Context) {
-      return Context.getValue();
-    },
   };
 })();
+
+// export const render = MyReact.render;
+// export const useState = MyReact.useState;
+// export const useEffect = MyReact.useEffect;
+// export const useRef = MyReact.useRef;
+export default MyReact;

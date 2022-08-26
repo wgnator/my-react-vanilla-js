@@ -1,13 +1,12 @@
 import BreweryItem from "./BreweryItem.js";
 import useCustomHook from "./customHook.js";
-import { MyReact } from "./MyReact.js";
-import useNavigate from "./useNavigate.js";
+// import { render, useState, useEffect } from "./MyReact.js";
+import MyReact from "./MyReact.js";
 import { parseHTMLToVDOMTree } from "./utils.js";
 
-export default function FetchPage() {
+export default function FetchPage({ navigateTo }) {
   const [dogImageURL, setDogImageURL] = MyReact.useState();
   const { user } = useCustomHook();
-  const navigateTo = useNavigate();
   const [breweries, setBreweries] = MyReact.useState();
 
   MyReact.useEffect(() => {

@@ -1,13 +1,12 @@
-import { MyReact } from "./MyReact.js";
-import { PathStateContext } from "./PathStateContext.js";
-
+// import { useState } from "./MyReact.js";
+import MyReact from "./MyReact.js";
 export default function useNavigate() {
-  console.log("pathStateContext in useContext", PathStateContext.getValue());
-  const { setCurrentPath } = MyReact.useContext(PathStateContext);
+  const [currentPath, setCurrentPath] = MyReact.useState(window.location.pathname);
+  console.log("current path in usenavigate", currentPath);
   const navigateTo = (path) => {
-    setCurrentPath(path);
     window.history.pushState(null, null, path);
+    setCurrentPath(window.location.pathname);
   };
 
-  return navigateTo;
+  return { currentPath, navigateTo };
 }

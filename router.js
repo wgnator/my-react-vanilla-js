@@ -1,13 +1,14 @@
-import { MyReact } from "./MyReact.js";
+// import { render } from "./MyReact.js";
+import MyReact from "./MyReact.js";
 import { parseHTMLToVDOMTree } from "./utils.js";
 
-export default function BrowserRouter({ currentPath, routes }) {
+export default function BrowserRouter({ currentPath, routes, navigateTo }) {
   console.log("requested route:", currentPath);
   const requestedRoute = currentPath.match(/\/[a-zA-Z0-9]*/g);
   const matchingComponent = findMatchingPath(requestedRoute, routes);
   return parseHTMLToVDOMTree`
   <>
-    ${MyReact.render(matchingComponent.component)}
+    ${MyReact.render(matchingComponent.component, { navigateTo: navigateTo })}
   </>
   `;
 }

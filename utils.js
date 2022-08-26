@@ -14,21 +14,21 @@ Number.prototype.isEndIndexOf = function (data) {
   return this === data.length - 1;
 };
 
-const isInnerText = (index, brokenHTML) => {
-  const closestUpcomingIndexOf = (char, startingArrayIndex, array) => {
-    let piece = array[startingArrayIndex];
-    let offset = Math.max(piece.indexOf(char), 0);
-    while (piece.indexOf(char) < 0) {
-      offset += piece.length;
-      piece = brokenHTML[startingArrayIndex++];
-    }
-    return offset + piece.indexOf(char);
-  };
+// const isInnerText = (index, brokenHTML) => {
+//   const closestUpcomingIndexOf = (char, startingArrayIndex, array) => {
+//     let piece = array[startingArrayIndex];
+//     let offset = Math.max(piece.indexOf(char), 0);
+//     while (piece.indexOf(char) < 0) {
+//       offset += piece.length;
+//       piece = brokenHTML[startingArrayIndex++];
+//     }
+//     return offset + piece.indexOf(char);
+//   };
 
-  return (
-    closestUpcomingIndexOf("<", index, brokenHTML) < closestUpcomingIndexOf(">", index, brokenHTML)
-  );
-};
+//   return (
+//     closestUpcomingIndexOf("<", index, brokenHTML) < closestUpcomingIndexOf(">", index, brokenHTML)
+//   );
+// };
 
 export function parseHTMLToVDOMTree(brokenHTML, ...variables) {
   const regexForTagAndTextSelection = /<[\s\S]*?(?=<\/?)/g;
