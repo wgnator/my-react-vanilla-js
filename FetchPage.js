@@ -1,11 +1,13 @@
 import BreweryItem from "./BreweryItem.js";
 import useCustomHook from "./customHook.js";
 import { MyReact } from "./MyReact.js";
-import { parseHTMLToRenderTree } from "./utils.js";
+import useNavigate from "./useNavigate.js";
+import { parseHTMLToVDOMTree } from "./utils.js";
 
-export default function FetchPage({ navigateTo }) {
+export default function FetchPage() {
   const [dogImageURL, setDogImageURL] = MyReact.useState();
   const { user } = useCustomHook();
+  const navigateTo = useNavigate();
   const [breweries, setBreweries] = MyReact.useState();
 
   MyReact.useEffect(() => {
@@ -26,7 +28,7 @@ export default function FetchPage({ navigateTo }) {
       });
   }, []);
 
-  return parseHTMLToRenderTree`
+  return parseHTMLToVDOMTree`
   <div class="FetchPage">
     <div><button onclick="${() => navigateTo("/")}">go back to main page</button></div>
     <div class="dog_name">name: ${user?.results[0].name.first}</div>
