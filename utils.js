@@ -32,17 +32,17 @@ export function parseHTMLToRenderTree(brokenHTML, ...variables) {
   const regexForTagAndTextSelection = /<[\s\S]*?(?=<\/?)/g;
   const regexForAttributes = /[a-z]+="[0-9a-zA-Z=_\-:;/.\[\]\s]+"/g;
   const singletonTags = ["area", "base", "br", "col", "command", "embed", "hr", "img", "input", "keygen", "link", "meta", "source", "track", "wbr"];
-
   let joinedHTML;
-
+  console.log(brokenHTML, variables);
+  //write variables indexes into html for future parsing
   if (variables) {
-    let variableIndex = 0;
-    joinedHTML = brokenHTML
-      .map((HTMLPiece, index) => HTMLPiece + (index.isEndIndexOf(brokenHTML) ? "" : isInnerText(index + 1, brokenHTML) ? variables[variableIndex++] : `[${variableIndex++}]`))
-      .join("");
+    let varIndex = 0;
+    joinedHTML = brokenHTML.map((HTMLPiece, pieceIndex) => HTMLPiece + (pieceIndex.isEndIndexOf(brokenHTML) ? "" : `[${varIndex++}]`)).join("");
   } else joinedHTML = brokenHTML[0];
 
+  //splits html into opening tag + inner text / closing tag
   const htmlArr = joinedHTML.match(regexForTagAndTextSelection);
+  console.log("htmlarr:", htmlArr);
 
   function recursivelyParseHTML(htmlArr) {
     if (htmlArr.length < 1) return;
@@ -51,11 +51,36 @@ export function parseHTMLToRenderTree(brokenHTML, ...variables) {
       return;
     }
 
+    // split into opening tag / inner text
     const currentLevelTagString = htmlArr.splice(0, 1);
     let [openingTag, innerText] = currentLevelTagString[0].split(">");
+    const children = [];
+
+    //if has functional child components or array(by mapped) of children
+    if (innerText) {
+      const matchingVariables = innerText.match(/\[[0-9]+\]/g);
+      let indexes;
+      if (matchingVariables) {
+        indexes = matchingVariables.map((e) => e.replace("[", "").replace("]", ""));
+        indexes.forEach((index) => {
+          if (variables[index] instanceof Object) {
+            console.log("variable: ", variables[index], variables[index] instanceof Array);
+            if (variables[index] instanceof Array) children.push(...variables[index]);
+            else children.push(variables[index]);
+            innerText = innerText.replace(`[${index}]`, "");
+          } else innerText = innerText.replace(`[${index}]`, variables[index]);
+        });
+      }
+    }
+    console.log("children", children);
+    //remove white spaces between tags
     if (!innerText.replaceAll(" ", "").replaceAll("\n", "")) innerText = null;
     else if (innerText.startsWith("\n")) innerText = innerText.replace("\n", "");
+
+    //get tag name
     const tagName = openingTag.match(/[a-z0-9]+/)[0];
+
+    //get attributes
     const attributesArr = openingTag.match(regexForAttributes);
     const attributesObj =
       attributesArr?.reduce((prev, curr) => {
@@ -69,9 +94,10 @@ export function parseHTMLToRenderTree(brokenHTML, ...variables) {
         }
       }, {}) || [];
 
-    const children = [];
     let childElements;
 
+    //recursively parse children
+    //for singleton tags, prevent parsing the next element as child
     if (singletonTags.every((singletonTag) => singletonTag !== tagName))
       do {
         childElements = recursivelyParseHTML(htmlArr);
@@ -84,11 +110,11 @@ export function parseHTMLToRenderTree(brokenHTML, ...variables) {
   return recursivelyParseHTML(htmlArr);
 }
 
-export function parseRenderTreeToDOM(tree) {
-  if (!tree) return;
-  const { tagName, className, text, children, ...attributes } = tree;
+export function parseRenderTreeToDOMTree(renderTree) {
+  if (!renderTree) return;
+  const { tagName, className, text, children, ...attributes } = renderTree;
   const element = createElement(tagName, className, attributes, text);
-  const childrenElements = tree.children?.map((child) => parseRenderTreeToDOM(child));
+  const childrenElements = renderTree.children?.map((child) => parseRenderTreeToDOMTree(child));
   if (childrenElements) element.append(...childrenElements);
   return element;
 }

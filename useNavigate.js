@@ -6,8 +6,8 @@ export default function useNavigate() {
   console.log("currentPath: ", currentPath);
 
   const navigateTo = (path) => {
-    window.history.pushState(null, null, path);
     setCurrentPath(path);
+    window.history.pushState(null, null, path);
   };
 
   return { currentPath, navigateTo };

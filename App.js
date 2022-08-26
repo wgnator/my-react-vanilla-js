@@ -4,6 +4,7 @@ import router from "./router.js";
 import { MyReact } from "./MyReact.js";
 import FetchPage from "./FetchPage.js";
 import useNavigate from "./useNavigate.js";
+import { parseHTMLToRenderTree } from "./utils.js";
 
 export default function App() {
   const { currentPath, navigateTo } = useNavigate();
@@ -11,25 +12,20 @@ export default function App() {
   const routes = [
     {
       pathname: "/",
-      props: { navigateTo: navigateTo },
       render() {
-        return MyReact.render(Main, this.props);
+        return MyReact.render(Main, { navigateTo: navigateTo });
       },
     },
     {
       pathname: "/fetch",
-      props: { navigateTo: navigateTo },
       render() {
-        return MyReact.render(FetchPage, this.props);
+        return MyReact.render(FetchPage, { navigateTo: navigateTo });
       },
     },
   ];
-
-  const $App = createElement("div", "App");
-  $App.append(router(currentPath, routes).render());
-  return {
-    render: () => {
-      return $App;
-    },
-  };
+  return parseHTMLToRenderTree`
+    <div class="App">
+      ${router(currentPath, routes).render()}
+    </div>
+  `;
 }

@@ -1,11 +1,13 @@
 import App from "./App.js";
 import { MyReact } from "./MyReact.js";
+import { parseRenderTreeToDOMTree } from "./utils.js";
 
 export const RERENDER_EVENT = "RERENDER";
 
 window.addEventListener(RERENDER_EVENT, () => {
-  console.log("rerender event dispatched");
-  const app = MyReact.render(App);
+  console.log("render event dispatched");
+  const renderTree = MyReact.render(App);
+  const app = parseRenderTreeToDOMTree(renderTree);
   document.querySelector(".App")?.remove();
   document.querySelector("body").append(app);
 });

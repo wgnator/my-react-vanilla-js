@@ -1,11 +1,11 @@
 import { MyReact } from "./MyReact.js";
-import { parseRenderTreeToDOM, parseHTMLToRenderTree } from "./utils.js";
+import { parseHTMLToRenderTree } from "./utils.js";
 
 export default function Main({ navigateTo }) {
   const [counter, setCounter] = MyReact.useState(0);
   const useRefTestRef = MyReact.useRef(0);
 
-  const renderTree = parseHTMLToRenderTree`
+  return parseHTMLToRenderTree`
   <div class="main">
     <div class="mainBox" style="width: 10rem; height: 5rem; border: 1px solid black">
       useState counter: ${counter}
@@ -16,9 +16,4 @@ export default function Main({ navigateTo }) {
     <button onclick="${() => navigateTo("/fetch")}">go to fetch page</button>
   </div>
   `;
-  return {
-    render() {
-      return parseRenderTreeToDOM(renderTree);
-    },
-  };
 }
