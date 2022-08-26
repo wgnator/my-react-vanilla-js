@@ -1,0 +1,16 @@
+body {
+  box-sizing: border-box;
+}
+.NavBar {
+  width: 100%;
+  height: 5rem;
+  background-color: rgb(47, 90, 196);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.NavBar > * {
+  margin: 0 1rem;
+}

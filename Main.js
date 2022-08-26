@@ -1,11 +1,15 @@
 import { MyReact } from "./MyReact.js";
-import { parseHTMLToRenderTree } from "./utils.js";
+import { PathStateContext } from "./PathStateContext.js";
+import useNavigate from "./useNavigate.js";
+import { parseHTMLToVDOMTree } from "./utils.js";
 
-export default function Main({ navigateTo }) {
+export default function Main() {
   const [counter, setCounter] = MyReact.useState(0);
   const useRefTestRef = MyReact.useRef(0);
-
-  return parseHTMLToRenderTree`
+  const navigateTo = useNavigate();
+  const contextValue = MyReact.useContext(PathStateContext);
+  console.log("main component context value:", contextValue);
+  return parseHTMLToVDOMTree`
   <div class="main">
     <div class="mainBox" style="width: 10rem; height: 5rem; border: 1px solid black">
       useState counter: ${counter}

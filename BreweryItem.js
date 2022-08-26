@@ -1,7 +1,7 @@
-import { parseHTMLToRenderTree } from "./utils.js";
+import { parseHTMLToVDOMTree } from "./utils.js";
 
 export default function BreweryItem({ data }) {
-  return parseHTMLToRenderTree`
+  return parseHTMLToVDOMTree`
     <div class="brewery_item">
       Name: ${data?.name}
       Street: ${data?.street}

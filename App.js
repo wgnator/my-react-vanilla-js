@@ -1,31 +1,40 @@
-import createElement from "./createElement.js";
 import Main from "./Main.js";
-import router from "./router.js";
+import BrowserRouter from "./router.js";
 import { MyReact } from "./MyReact.js";
 import FetchPage from "./FetchPage.js";
-import useNavigate from "./useNavigate.js";
-import { parseHTMLToRenderTree } from "./utils.js";
+import { parseHTMLToVDOMTree } from "./utils.js";
+import NavBar from "./NavBar.js";
+import { PathStateContext } from "./PathStateContext.js";
 
 export default function App() {
-  const { currentPath, navigateTo } = useNavigate();
-
+  const [currentPath, setCurrentPath] = MyReact.useState(window.location.pathname);
   const routes = [
     {
       pathname: "/",
-      render() {
-        return MyReact.render(Main, { navigateTo: navigateTo });
-      },
+      component: Main,
     },
+
     {
       pathname: "/fetch",
-      render() {
-        return MyReact.render(FetchPage, { navigateTo: navigateTo });
-      },
+      component: FetchPage,
     },
   ];
-  return parseHTMLToRenderTree`
+
+  return parseHTMLToVDOMTree`
     <div class="App">
-      ${router(currentPath, routes).render()}
+    ${MyReact.render(PathStateContext.Provider, {
+      value: { currentPath: currentPath, setCurrentPath: setCurrentPath },
+      children: [
+        [NavBar, null],
+        [
+          BrowserRouter,
+          {
+            currentPath: currentPath,
+            routes: routes,
+          },
+        ],
+      ],
+    })}
     </div>
   `;
 }
