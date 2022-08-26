@@ -1,5 +1,4 @@
 import { RERENDER_EVENT } from "./index.js";
-import { parseRenderTreeToDOMTree } from "./utils.js";
 
 export const MyReact = (function () {
   let hookStates = [];
