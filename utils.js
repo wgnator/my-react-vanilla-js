@@ -67,6 +67,7 @@ export function parseHTMLToVDOMTree(brokenHTML, ...variables) {
   const htmlArr = joinedHTML.match(regexForTagAndTextSelection);
 
   function recursivelyParseHTML(htmlArr) {
+    console.log(htmlArr);
     if (htmlArr.length < 1) return;
     if (htmlArr[0].match(/<\//)) {
       htmlArr.splice(0, 1);
@@ -76,27 +77,8 @@ export function parseHTMLToVDOMTree(brokenHTML, ...variables) {
     // split into opening tag / inner text
     const currentLevelTagString = htmlArr.splice(0, 1);
     let [openingTag, innerText] = currentLevelTagString[0].split(">");
+
     const children = [];
-
-    //if has functional child components or array(by mapped) of children
-    if (innerText) {
-      const matchingVariables = innerText.match(/\[[0-9]+\]/g);
-      let indexes;
-      if (matchingVariables) {
-        indexes = matchingVariables.map((e) => e.replace("[", "").replace("]", ""));
-        indexes.forEach((index) => {
-          if (variables[index] instanceof Object) {
-            if (variables[index] instanceof Array) children.push(...variables[index]);
-            else children.push(variables[index]);
-            innerText = innerText.replace(`[${index}]`, "");
-          } else innerText = innerText.replace(`[${index}]`, variables[index]);
-        });
-      }
-    }
-
-    //remove white spaces between tags
-    if (!innerText.replaceAll(" ", "").replaceAll("\n", "")) innerText = null;
-    else if (innerText.startsWith("\n")) innerText = innerText.replace("\n", "");
 
     //get tag name
     let tagName = openingTag?.match(/[a-z0-9]+/);
@@ -121,6 +103,28 @@ export function parseHTMLToVDOMTree(brokenHTML, ...variables) {
         }, {}) || [];
     }
 
+    //if has functional child components or array(by mapped) of children
+    if (innerText) {
+      const matchingVariables = innerText.match(/\[[0-9]+\]/g);
+      let indexes;
+      if (matchingVariables) {
+        console.log("matchingVariables:", matchingVariables, innerText);
+        indexes = matchingVariables.map((e) => e.replace("[", "").replace("]", ""));
+        indexes.forEach((index) => {
+          if (variables[index] instanceof Object) {
+            if (variables[index] instanceof Array) children.push(...variables[index]);
+            else children.push(variables[index]);
+            innerText = innerText.replace(`[${index}]`, "");
+          } else innerText = innerText.replace(`[${index}]`, variables[index] ?? "");
+        });
+        if (indexes[0] === "1") console.log(tagName, innerText, children);
+      }
+    }
+
+    //remove white spaces between tags
+    if (!innerText.replaceAll(" ", "").replaceAll("\n", "")) innerText = null;
+    else if (innerText.startsWith("\n")) innerText = innerText.replace("\n", "");
+
     let childElements;
 
     //recursively parse children
@@ -130,6 +134,7 @@ export function parseHTMLToVDOMTree(brokenHTML, ...variables) {
         childElements = recursivelyParseHTML(htmlArr);
         if (childElements) children.push(childElements);
       } while (childElements);
+    if (!tagName && children.length === 0 && !innerText) return;
 
     return tagName
       ? {
@@ -155,4 +160,10 @@ export function parseVDOMTreeToDOMTree(VDOMTree) {
     if (childElements) element.append(...childElements);
     return element;
   } else return childElements;
+}
+
+export function generateUniqueID(existingIDs) {
+  let newID;
+  while (existingIDs.find((id) => id === newID)) newID = Math.random().toString();
+  return newID;
 }

@@ -32,7 +32,7 @@ export default function FetchPage({ navigateTo }) {
     <div><button onclick="${() => navigateTo("/")}">go back to main page</button></div>
     <div class="dog_name">name: ${user?.results[0].name.first}</div>
     <img src="${dogImageURL}" alt="" class="dog_photo" /> 
-    <div>${breweries?.map((brewery) => {
+    <div class="brewing_company_list_container">${breweries?.map((brewery) => {
       return MyReact.render(BreweryItem, { data: brewery });
     })}</div>
   </div>

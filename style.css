@@ -1,16 +1,87 @@
+* {
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
 body {
   box-sizing: border-box;
+}
+.App {
+  width: 100%;
+  height: 100%;
+}
+main {
+  margin: 0 auto;
+  width: fit-content;
+}
+main > * {
+  margin: 1rem 0;
+}
+main button {
+  display: block;
 }
 .NavBar {
   width: 100%;
   height: 5rem;
-  background-color: rgb(47, 90, 196);
+  background-color: rgb(87, 69, 185);
   color: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
 }
 
 .NavBar > * {
   margin: 0 1rem;
+}
+
+.avatar {
+  border: 2px solid white;
+  border-radius: 50%;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.dropdown_container {
+  position: absolute;
+  right: 0;
+  margin: 0;
+  top: 100%;
+  background-color: rgb(87, 69, 185);
+  width: 10rem;
+  height: 5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  border: 1px solid white;
+  animation: appear 0.3s linear forwards;
+  z-index: -1;
+}
+
+.dropdown_container > * {
+  border-bottom: 1px solid white;
+  height: 50%;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@keyframes appear {
+  0% {
+    top: 0;
+  }
+  100% {
+    top: 100%;
+  }
+}
+
+.count_box {
+  height: 5rem;
+  border: 1px solid black;
+}
+
+.brewing_company_list_container > * {
+  border: 1px solid black;
 }

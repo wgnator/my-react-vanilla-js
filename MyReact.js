@@ -1,87 +1,95 @@
 import { RENDER_EVENT } from "./index.js";
 
 const MyReact = (function () {
-  const hookStates = [];
+  const componentStates = {};
   let currentHookIndex = 0;
+  let currentComponentStates;
   let effectsToRun = [];
-  const renderedComponentsInSeries = [];
-  let currentComponentIndex = 0;
 
   return {
     render(Component, props) {
-      if (renderedComponentsInSeries[currentComponentIndex] === undefined)
-        renderedComponentsInSeries.push(Component);
-      else if (renderedComponentsInSeries[currentComponentIndex] !== Component) {
-        hookStates.splice(currentHookIndex);
-        renderedComponentsInSeries[currentComponentIndex] = Component;
-      }
-      currentComponentIndex++;
-
-      const VDOMTree = Component(props);
-      console.log("rendered components:", renderedComponentsInSeries);
-
       currentHookIndex = 0;
 
-      if (effectsToRun) {
-        effectsToRun.forEach((effect, index) => {
-          if (effect.componentIndex === currentComponentIndex) {
-            effect.callback();
-            console.log("effects to run before splice: ", effectsToRun);
-          }
-        });
-        effectsToRun = effectsToRun.reduce(
-          (prev, curr) => (curr.componentIndex !== currentComponentIndex ? prev.push(curr) : prev),
-          []
-        );
-        console.log("effects to run after splice: ", effectsToRun);
+      if (!Object.keys(componentStates).includes(Component.name)) {
+        componentStates[Component.name] = {};
+        componentStates[Component.name].states = [];
+        componentStates[Component.name].mounted = true;
       }
+      currentComponentStates = componentStates[Component.name].states;
 
-      currentComponentIndex--;
-      console.log("hook states after render: ", JSON.stringify(hookStates));
+      let VDOMTree;
+
+      if (Component.name === "App") {
+        Object.keys(componentStates).forEach(
+          (component) => (componentStates[component].mounted = false)
+        );
+        componentStates[Component.name].mounted = true;
+        VDOMTree = Component();
+
+        while (effectsToRun.length > 0) {
+          effectsToRun.pop()();
+        }
+        Object.keys(componentStates).forEach(
+          (component) => !componentStates[component].mounted && delete componentStates[component]
+        );
+        console.log("hook states after render: ", componentStates);
+      } else {
+        componentStates[Component.name].mounted = true;
+        VDOMTree = Component(props);
+        if (Component.name === "NavBar")
+          console.log("is rendering", Component.name, "result:", VDOMTree);
+      }
 
       return VDOMTree;
     },
 
     useState(initialValue) {
+      const currentComponent = currentComponentStates;
       const thisHookIndex = currentHookIndex;
-      if (hookStates[currentHookIndex] === undefined) hookStates.push({ value: initialValue });
+      if (currentComponentStates[currentHookIndex] === undefined) {
+        currentComponentStates.push({
+          value: initialValue,
+          setState: (newState) => {
+            const prevState = currentComponent[thisHookIndex].value;
+            currentComponent[thisHookIndex].value =
+              newState instanceof Function ? newState(prevState) : newState;
+            window.dispatchEvent(new CustomEvent(RENDER_EVENT));
+          },
+        });
+      }
 
-      const setState = (newState) => {
-        hookStates[thisHookIndex].value = newState instanceof Function ? newState() : newState;
-        window.dispatchEvent(new CustomEvent(RENDER_EVENT));
-      };
-      return [hookStates[currentHookIndex++].value, setState];
+      return [
+        currentComponentStates[currentHookIndex].value,
+        currentComponentStates[currentHookIndex++].setState,
+      ];
     },
 
     useEffect(callback, dependencies) {
-      if (hookStates[currentHookIndex] === undefined) {
-        hookStates.push({ callback: callback, dependenciesState: dependencies });
-        effectsToRun.push({ callback: callback, componentIndex: currentComponentIndex });
+      if (currentComponentStates[currentHookIndex] === undefined) {
+        currentComponentStates.push({ callback: callback, dependenciesState: dependencies });
+        effectsToRun.push(callback);
       } else if (
-        !hookStates[currentHookIndex].dependenciesState.every(
+        !currentComponentStates[currentHookIndex].dependenciesState.every(
           (previousDependencyState, i) =>
             JSON.stringify(previousDependencyState) === JSON.stringify(dependencies[i])
         )
-      ) {
-        effectsToRun.push({
-          callback: hookStates[currentHookIndex].callback,
-          componentIndex: currentComponentIndex,
-        });
-      }
+      )
+        effectsToRun.push(callback);
+
       currentHookIndex++;
     },
 
     useRef(initialValue) {
-      if (hookStates[currentHookIndex] === undefined) {
-        hookStates.push({ current: initialValue });
+      if (currentComponentStates[currentHookIndex] === undefined) {
+        currentComponentStates.push({ current: initialValue });
       }
-      return hookStates[currentHookIndex++];
+      return currentComponentStates[currentHookIndex++];
     },
   };
 })();
 
-// export const render = MyReact.render;
-// export const useState = MyReact.useState;
-// export const useEffect = MyReact.useEffect;
-// export const useRef = MyReact.useRef;
+export const render = MyReact.render;
+export const useState = MyReact.useState;
+export const useEffect = MyReact.useEffect;
+export const useRef = MyReact.useRef;
 export default MyReact;
