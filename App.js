@@ -1,10 +1,10 @@
-import createElement from "./createElement.js";
 import Main from "./Main.js";
-import router from "./router.js";
-import { MyReact } from "./MyReact.js";
+import BrowserRouter from "./router.js";
+import { render } from "./MyReact.js";
 import FetchPage from "./FetchPage.js";
+import { parseHTMLToVDOMTree } from "./utils.js";
+import NavBar from "./NavBar.js";
 import useNavigate from "./useNavigate.js";
-import { parseHTMLToRenderTree } from "./utils.js";
 
 export default function App() {
   const { currentPath, navigateTo } = useNavigate();
@@ -12,20 +12,25 @@ export default function App() {
   const routes = [
     {
       pathname: "/",
-      render() {
-        return MyReact.render(Main, { navigateTo: navigateTo });
-      },
+      component: Main,
     },
+
     {
       pathname: "/fetch",
-      render() {
-        return MyReact.render(FetchPage, { navigateTo: navigateTo });
-      },
+      component: FetchPage,
     },
   ];
-  return parseHTMLToRenderTree`
+
+  const VDOM = parseHTMLToVDOMTree`
     <div class="App">
-      ${router(currentPath, routes).render()}
+    ${render(NavBar)}
+    ${render(BrowserRouter, {
+      navigateTo: navigateTo,
+      currentPath: currentPath,
+      routes: routes,
+    })}
     </div>
   `;
+  console.log("app VDOM:", VDOM);
+  return VDOM;
 }
