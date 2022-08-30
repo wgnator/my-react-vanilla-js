@@ -50,9 +50,12 @@ const MyReact = (function () {
           value: initialValue,
           setState: (newState) => {
             const prevState = currentComponent[thisHookIndex].value;
-            currentComponent[thisHookIndex].value =
-              newState instanceof Function ? newState(prevState) : newState;
-            window.dispatchEvent(new CustomEvent(RENDER_EVENT));
+            if (Object.is(prevState, newState)) return;
+            else {
+              currentComponent[thisHookIndex].value =
+                newState instanceof Function ? newState(prevState) : newState;
+              window.dispatchEvent(new CustomEvent(RENDER_EVENT));
+            }
           },
         });
       }
@@ -70,8 +73,12 @@ const MyReact = (function () {
           value: initializer ? initializer(initialValue) : initialValue,
           dispatch: (action) => {
             const prevState = currentComponent[thisHookIndex].value;
-            currentComponent[thisHookIndex].value = reducer(prevState, action);
-            window.dispatchEvent(new CustomEvent(RENDER_EVENT));
+            const newState = reducer(prevState, action);
+            if (Object.is(prevState, newState)) return;
+            else {
+              currentComponent[thisHookIndex].value = newState;
+              window.dispatchEvent(new CustomEvent(RENDER_EVENT));
+            }
           },
         });
       }
