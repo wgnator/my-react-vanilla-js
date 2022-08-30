@@ -26,7 +26,7 @@ My own challenge to implement functional React (using hooks) from scratch in pla
 ## 2. parsing HTML to VDOM
 - to imitate React's usage of JSX, we can write in HTML format in component, which will be transformed to virtual DOM tree.
 ### parseHTMLtoVDOMTree
-- HTML is recieved as (tagged templates)[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#tagged_templates] to seperate HTML and variables. Variables are first turned to string indicating its corresponding index in the variables array, and are later evaluated to treat in the way it should be treated. (such as callback in onclick, another child VDOM, or just plain string/number data to be printed in innerHTML)
+- HTML is recieved as [tagged templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#tagged_templates) to seperate HTML and variables. Variables are first turned to string indicating its corresponding index in the variables array, and are later evaluated to treat in the way it should be treated. (such as callback in onclick, another child VDOM, or just plain string/number data to be printed in innerHTML)
 ### parseFragment
 - HTML are split into fragments starting from a tag to right before the next tag, regardless of whether it be opening/closing tag. Fragments are evalutated whether it starts with a opening tag/closing tag/variable index/plain text. After extracting the first significant bit, the rest is reattached to the next fragment to be parsed later.
 ### recursivelyParseHTML
