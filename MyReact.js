@@ -56,10 +56,28 @@ const MyReact = (function () {
           },
         });
       }
-
       return [
         currentComponentStates[currentHookIndex].value,
         currentComponentStates[currentHookIndex++].setState,
+      ];
+    },
+
+    useReducer(reducer, initialValue, initializer) {
+      const currentComponent = currentComponentStates;
+      const thisHookIndex = currentHookIndex;
+      if (currentComponentStates[currentHookIndex] === undefined) {
+        currentComponentStates.push({
+          value: initializer ? initializer(initialValue) : initialValue,
+          dispatch: (action) => {
+            const prevState = currentComponent[thisHookIndex].value;
+            currentComponent[thisHookIndex].value = reducer(prevState, action);
+            window.dispatchEvent(new CustomEvent(RENDER_EVENT));
+          },
+        });
+      }
+      return [
+        currentComponentStates[currentHookIndex].value,
+        currentComponentStates[currentHookIndex++].dispatch,
       ];
     },
 
@@ -74,7 +92,6 @@ const MyReact = (function () {
         )
       )
         effectsToRun.push(callback);
-
       currentHookIndex++;
     },
 
