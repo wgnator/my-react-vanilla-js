@@ -36,8 +36,7 @@ const MyReact = (function () {
       } else {
         componentStates[Component.name].mounted = true;
         VDOMTree = Component(props);
-        if (Component.name === "NavBar")
-          console.log("is rendering", Component.name, "result:", VDOMTree);
+        console.log("is rendering", Component.name, "result:", VDOMTree);
       }
 
       return VDOMTree;

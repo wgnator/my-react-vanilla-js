@@ -11,18 +11,17 @@ export default function NavBar() {
     <div class="user_info">
       <div class="avatar" onclick="${() => setIsShowingDropdown(!isShowingDropdown)}">user</div>
     </div>
-    <>${
-      isShowingDropdown
-        ? render(Dropdown, {
-            children: parseHTMLToVDOMTree`
+    ${
+      isShowingDropdown &&
+      render(Dropdown, {
+        children: parseHTMLToVDOMTree`
         <>
           <div>My Profile</div>
           <div>Logout </div>
         </>
     `,
-          })
-        : ""
-    }</>
-  </div>;
+      })
+    }
+  </div>
   `;
 }
