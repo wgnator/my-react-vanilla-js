@@ -23,7 +23,7 @@ My own challenge to implement functional React (using hooks) from scratch in pla
 ### useRef()
 - ```useRef``` is used in two ways: 1. to store persisting data after render without trigerring rerender, 2. to keep a link to a certain DOM. For the second purpose, the ref variable can be stored in a VDOM attribute and will be linked to actual DOM later in .current property during VDOM to DOM conversion process.
 
-## 2. parsing HTML to VDOM
+## 2. Parsing HTML to VDOM
 - to imitate React's usage of JSX, we can write in HTML format in component, which will be transformed to virtual DOM tree.
 ### parseHTMLtoVDOMTree
 - HTML is recieved as [tagged templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#tagged_templates) to seperate HTML and variables. Variables are first turned to string indicating its corresponding index in the variables array, and are later evaluated to be handled in the way it should be handled. (e.g. must be handled differently depending on whether it is callback in onclick, another child VDOM, or just plain string/number data to be printed in innerHTML)
@@ -31,7 +31,7 @@ My own challenge to implement functional React (using hooks) from scratch in pla
 - HTML is split into fragments starting from a tag to right before the next tag, regardless of whether it be opening/closing tag. Fragments are evalutated whether it starts with a opening tag/closing tag/variable index/plain text. After extracting the first significant bit, the rest is reattached to the next fragment to be parsed later.
 ### recursivelyParseHTML
 - it parses HTML fragments until the end or HTML fragment array in sequential way, but the function is called recursively when it meets an opening tag until it meets its closing tag.
-## 3. parsing VDOM to DOM tree
+## 3. Turning VDOM into DOM tree
 - ```parseVDOMTreeToDOMTree``` recursively traverse the VDOM tree to create/append HTML elements to create DOM tree, which is eventually appended to the document in ```index.js```
 - A React-like reconciliation with diffing mechanism is to be implemented later.
 
