@@ -14,10 +14,12 @@ My own challenge to implement functional React (using hooks) from scratch in pla
 ### component states
 - States are stored in MyReact closure environment as an object for each component. Each component state object keeps state of the target component mounted/unmounted. States in a component are stored in hook calls order. Therefore, conditionally calling hooks should not be allowed.
 ### useState()
-- ```useState``` creates a component state and returns the most updated state and setState().
+- ```useState``` creates a component state and returns most updated state and setState().
 ### setState()
 - ```setState``` is created only once and stored in its component state object when ```useState``` is called, with its hook index imprinted inside, so that the linked hook index is not affected by other hook calls. (as setStates can be called anywhere in a component)
-- calling ```setState``` also dispatches a CustomEvent to rerender the whole tree.
+- calling ```setState``` will first compare old state and new state to deteremine whether to dispatch a CustomEvent to rerender the whole tree.
+### useReducer()
+-```useReducer``` takes a pure function reducer and initial value and initializer function, then returns most updates state and dispatch(), which can be used to call the previously received reducer te execute action receved as the argument. (We can pass in {actionType: ..., payload: ... } as an argument, which is a common practice when using useReducer or Redux)
 ### useEffect()
 - callback in ```useEffect``` is first examined whehter it should be executed depending on changes in its dependcies' states or whether it is called first time. If it should be executed, it is pushed into ```effectsToRun``` stack and is executed after the construction of whole tree has been finished.
 ### useRef()
