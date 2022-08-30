@@ -14,143 +14,181 @@ Number.prototype.isEndIndexOf = function (data) {
   return this === data.length - 1;
 };
 
-// const isInnerText = (index, brokenHTML) => {
-//   const closestUpcomingIndexOf = (char, startingArrayIndex, array) => {
-//     let piece = array[startingArrayIndex];
-//     let offset = Math.max(piece.indexOf(char), 0);
-//     while (piece.indexOf(char) < 0) {
-//       offset += piece.length;
-//       piece = brokenHTML[startingArrayIndex++];
-//     }
-//     return offset + piece.indexOf(char);
-//   };
+String.prototype.hasValidText = function () {
+  return this ? !!this.replaceAll(" ", "").replaceAll("\n", "") : false;
+};
 
-//   return (
-//     closestUpcomingIndexOf("<", index, brokenHTML) < closestUpcomingIndexOf(">", index, brokenHTML)
-//   );
-// };
-
-export function parseHTMLToVDOMTree(brokenHTML, ...variables) {
-  const regexForTagAndTextSelection = /<[\s\S]*?(?=<\/?)/g;
-  const regexForAttributes = /[a-z]+="[0-9a-zA-Z=_\-:;/.\[\]\s]+"/g;
-  const singletonTags = [
-    "area",
-    "base",
-    "br",
-    "col",
-    "command",
-    "embed",
-    "hr",
-    "img",
-    "input",
-    "keygen",
-    "link",
-    "meta",
-    "source",
-    "track",
-    "wbr",
-  ];
-  let joinedHTML;
-
-  //write variables indexes into html for future parsing
-  if (variables) {
-    let varIndex = 0;
-    joinedHTML = brokenHTML
-      .map(
-        (HTMLPiece, pieceIndex) =>
-          HTMLPiece + (pieceIndex.isEndIndexOf(brokenHTML) ? "" : `[${varIndex++}]`)
-      )
-      .join("");
-  } else joinedHTML = brokenHTML[0];
-
-  //splits html into opening tag + inner text / closing tag
-  const htmlArr = joinedHTML.match(regexForTagAndTextSelection);
-
-  function recursivelyParseHTML(htmlArr) {
-    console.log(htmlArr);
-    if (htmlArr.length < 1) return;
-    if (htmlArr[0].match(/<\//)) {
-      htmlArr.splice(0, 1);
-      return;
+const isInnerText = (index, brokenHTML) => {
+  const closestUpcomingIndexOf = (char, startingArrayIndex, array) => {
+    let piece = array[startingArrayIndex];
+    let offset = Math.max(piece.indexOf(char), 0);
+    while (piece.indexOf(char) < 0) {
+      offset += piece.length;
+      piece = brokenHTML[startingArrayIndex++];
     }
+    return offset + piece.indexOf(char);
+  };
 
-    // split into opening tag / inner text
-    const currentLevelTagString = htmlArr.splice(0, 1);
-    let [openingTag, innerText] = currentLevelTagString[0].split(">");
+  return (
+    closestUpcomingIndexOf("<", index, brokenHTML) < closestUpcomingIndexOf(">", index, brokenHTML)
+  );
+};
 
-    const children = [];
+const regexForTagAndTextSelection = /(<[\s\S]*?(?=<\/?))|<\/[\S]*/g;
+const regexForAttributes = /[a-z]+="[0-9a-zA-Z=_\-:;/.\[\]\s$]+"/g;
+const regexForOpeningTag = /<[A-Za-z0-9\s="_\-\[\]$]*(\s\/)*>/;
+const regexForClosingTag = /<\/[a-z0-9]*>/;
+const singletonTags = [
+  "area",
+  "base",
+  "br",
+  "col",
+  "command",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "keygen",
+  "link",
+  "meta",
+  "source",
+  "track",
+  "wbr",
+];
+const CLOSED = false;
 
-    //get tag name
-    let tagName = openingTag?.match(/[a-z0-9]+/);
-    if (tagName) tagName = tagName[0];
-    //get attributes
-    let attributesArr, attributesObj;
-    if (tagName) {
-      attributesArr = openingTag.match(regexForAttributes);
-      attributesObj =
-        attributesArr?.reduce((prev, curr) => {
-          if (curr.match(/=/)) {
-            let [attribute, value] = curr.split("=");
-            attribute = attribute.replaceAll(/\s/g, "").replace("class", "className");
-            if (value.match(/\[[0-9]+\]/)) value = variables[parseInt(value.match(/[0-9]+/)[0])];
-            return {
-              ...prev,
-              [attribute]: typeof value === "string" ? value.replaceAll('"', "") : value,
-            };
-          } else {
-            return { ...prev, [curr]: true };
-          }
-        }, {}) || [];
-    }
+const isSingleton = (tagName) => !singletonTags.every((singletonTag) => singletonTag !== tagName);
 
-    //if has functional child components or array(by mapped) of children
-    if (innerText) {
-      const matchingVariables = innerText.match(/\[[0-9]+\]/g);
-      let indexes;
-      if (matchingVariables) {
-        console.log("matchingVariables:", matchingVariables, innerText);
-        indexes = matchingVariables.map((e) => e.replace("[", "").replace("]", ""));
-        indexes.forEach((index) => {
-          if (variables[index] instanceof Object) {
-            if (variables[index] instanceof Array) children.push(...variables[index]);
-            else children.push(variables[index]);
-            innerText = innerText.replace(`[${index}]`, "");
-          } else innerText = innerText.replace(`[${index}]`, variables[index] ?? "");
-        });
-        if (indexes[0] === "1") console.log(tagName, innerText, children);
-      }
-    }
+const joinFragmentsWithVariableNumbering = (brokenHTML, variables) => {
+  let varIndex = 0;
+  return brokenHTML
+    .map(
+      (HTMLFragment, pieceIndex) =>
+        HTMLFragment +
+        (pieceIndex.isEndIndexOf(brokenHTML) || variables[varIndex] === undefined
+          ? ""
+          : `$[${varIndex++}]`)
+    )
+    .join("");
+};
 
-    //remove white spaces between tags
-    if (!innerText.replaceAll(" ", "").replaceAll("\n", "")) innerText = null;
-    else if (innerText.startsWith("\n")) innerText = innerText.replace("\n", "");
+const parseFragment = (html) => {
+  if (html.startsWith("\n")) html.replace(/\\n/, "");
+  html = html.trim();
+  let openingTag, closingTag, variableIndex, leftOver;
 
-    let childElements;
-
-    //recursively parse children
-    //for singleton tags, prevent parsing the next element as child
-    if (singletonTags.every((singletonTag) => singletonTag !== tagName))
-      do {
-        childElements = recursivelyParseHTML(htmlArr);
-        if (childElements) children.push(childElements);
-      } while (childElements);
-    if (!tagName && children.length === 0 && !innerText) return;
-
-    return tagName
-      ? {
-          tagName: tagName,
-          ...attributesObj,
-          text: innerText,
-          children: children.length > 0 ? children : null,
-        }
-      : { children: children.length > 0 ? children : null };
+  if (html.startsWith("<")) {
+    const boundaryIndex = html.indexOf(">") + 1;
+    if (html.match(regexForOpeningTag))
+      [openingTag, leftOver] = [html.slice(0, boundaryIndex), html.slice(boundaryIndex)];
+    else if (html.match(regexForClosingTag))
+      [closingTag, leftOver] = [html.slice(0, boundaryIndex), html.slice(boundaryIndex)];
+  } else if (html.startsWith("$")) {
+    const boundaryIndex = html.indexOf("]") + 1;
+    [variableIndex, leftOver] = [
+      html.slice(0, boundaryIndex).replace(/(\$\[)|(\])/g, ""),
+      html.slice(boundaryIndex),
+    ];
+  } else {
+    if (html.indexOf("$[") > -1)
+      [html, leftOver] = [html.slice(0, html.indexOf("$")), html.slice(html.indexOf("$"))];
+    else [html, leftOver] = [html, null];
   }
 
-  return recursivelyParseHTML(htmlArr);
+  if (leftOver) leftOver = leftOver.trim();
+
+  return {
+    type: openingTag
+      ? "OPENING_TAG"
+      : closingTag
+      ? "CLOSING_TAG"
+      : variableIndex
+      ? "VAR_INDEX"
+      : "INNER_TEXT",
+    parsed: openingTag || closingTag || variableIndex || html,
+    leftOver: leftOver || null,
+  };
+};
+
+export function parseHTMLToVDOMTree(brokenHTML, ...variables) {
+  console.log("variables:", variables);
+  const joinedHTML = variables
+    ? joinFragmentsWithVariableNumbering(brokenHTML, variables)
+    : brokenHTML[0];
+
+  const htmlArr = joinedHTML.match(regexForTagAndTextSelection);
+
+  const recursivelyParseHTML = () => {
+    if (htmlArr.length === 0) return false;
+
+    const currentString = htmlArr.splice(0, 1)[0];
+    const { type: fragmentType, parsed, leftOver } = parseFragment(currentString);
+
+    if (leftOver) htmlArr.splice(0, 0, leftOver);
+    if (!parsed.hasValidText()) return;
+
+    let attributesArr = [],
+      attributesObj = {},
+      children = [];
+
+    if (fragmentType === "INNER_TEXT") return parsed;
+    if (fragmentType === "VAR_INDEX")
+      return typeof variables[parsed] === "number"
+        ? variables[parsed].toString()
+        : variables[parsed];
+    if (fragmentType === "CLOSING_TAG") return CLOSED;
+
+    if (fragmentType === "OPENING_TAG") {
+      let tagName = parsed.match(/<[a-zA-Z0-9]*/)[0].replace("<", "");
+
+      if (tagName) {
+        attributesArr = parsed.match(regexForAttributes);
+        attributesObj =
+          attributesArr?.reduce((prev, curr) => {
+            if (curr.match(/=/)) {
+              let [attribute, value] = curr.split("=");
+              attribute = attribute.replaceAll(/\s/g, "").replace("class", "className");
+              if (value.match(/\$\[[0-9]+\]/))
+                value = variables[parseInt(value.match(/[0-9]+/)[0])];
+              return {
+                ...prev,
+                [attribute]: typeof value === "string" ? value.replaceAll('"', "") : value,
+              };
+            } else {
+              return { ...prev, [curr]: true };
+            }
+          }, {}) || [];
+      }
+
+      if (isSingleton(tagName)) return { tagName: tagName, ...attributesObj };
+
+      let nextChildElement,
+        i = 0;
+
+      while (nextChildElement !== CLOSED) {
+        i++;
+        if (i > 50) {
+          console.error("error occured during parsing children : infinitely looping!");
+          break;
+        }
+        nextChildElement = recursivelyParseHTML();
+        if (nextChildElement) children.push(nextChildElement);
+      }
+
+      if (!tagName && !children) return;
+      if (children.length === 1) children = children.flat();
+      return children.length > 0
+        ? { tagName: tagName, ...attributesObj, children: children }
+        : { tagName: tagName, ...attributesObj };
+    }
+  };
+
+  return recursivelyParseHTML();
 }
 
 export function parseVDOMTreeToDOMTree(VDOMTree) {
   if (!VDOMTree) return;
+  if (typeof VDOMTree === "string") return VDOMTree;
   const { tagName, className, text, children, ...attributes } = VDOMTree;
   let childElements = VDOMTree.children?.map((child) => parseVDOMTreeToDOMTree(child));
   if (childElements) childElements = childElements.flat();
@@ -159,7 +197,7 @@ export function parseVDOMTreeToDOMTree(VDOMTree) {
     if (Object.keys(attributes).includes("ref")) attributes.ref.current = element;
     if (childElements) element.append(...childElements);
     return element;
-  } else return childElements;
+  } else return childElements || "";
 }
 
 export function generateUniqueID(existingIDs) {
